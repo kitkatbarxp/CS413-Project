@@ -1,2 +1,3 @@
-This project is part of Middlebury College's Functional Programming class. It is a continuation of Ben Milwood's StepEval, and attempts
-learn from his attempt. 
+# Haskell Substitution Stepper
+
+This project is part of Middlebury College's Functional Programming class. It is a continuation of Ben Milwood's StepEval, and attempts to draw from his experiences to create a more elegant and less buggy Haskell Substitution Stepper. 
