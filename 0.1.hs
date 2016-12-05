@@ -1,4 +1,17 @@
-{-# LANGUAGE GADTs, BangPatterns #-}
+{-# LANGUAGE GADTs, BangPatterns, TemplateHaskell #-}
+import Language.Haskell.TH
+import Language.Haskell.Meta.Parse
+import Data.Typeable
+
+main :: IO ()
+main = do putStrLn "Please enter source code: "
+          code <- readLn
+          let Right ast = parseExp code
+          putStrLn $ show ast
+          -- following doesn't work yet because of GHC stage restriction
+          -- let exec = $( return (ast) )
+          -- putStrLn $ show exec
+
 
 data Op a where 
     I      :: Int -> Op Int -- all the possible numbers
@@ -61,4 +74,3 @@ run m@(Map cur lExp args) = do
     run state
 
 m = Map (IL []) (LAdd (I 10)) (IL [1,2,3,4])
-
