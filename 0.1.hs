@@ -2,21 +2,45 @@
 import Language.Haskell.TH
 import Language.Haskell.Meta.Parse
 import Data.Typeable
+import Language.Haskell.TH.Syntax
 
 main :: IO ()
 main = do putStrLn "Please enter source code: "
           code <- readLn
           let Right ast = parseExp code
-          putStrLn $ show ast
+          putStrLn $ show $ ast
+          -- putStrLn $ show $ parseAST ast
           -- following doesn't work yet because of GHC stage restriction
           -- let exec = $( return (ast) )
           -- putStrLn $ show exec
 
+-- Need to check type before this
+-- Need to check if op can run with list type 
+-- Need to lift out of context
+-- How to return null type if constructor gets Nothing - Smart Constructor?
+parseAST :: Exp -> Maybe Expr 
+parseAST (AppE (AppE (VarE map) op) l) = Just (Map (IL []) (parseOP op) (parseList l))
+-- parseAST _ = Nothing
+
+-- What if op is not valid?
+parseOP :: Exp -> LExpr
+parseOP (InfixE Nothing (VarE (+)) (Just (LitE v))) = LAdd (parseV v)
+parseOP (InfixE (Just (LitE v)) (VarE (+)) Nothing) = LAdd (parseV v)
+-- parseOP _ = Nothing
+
+-- TH variable to custom data type
+-- How to return Op of different type?
+parseV :: Lit -> Op Integer
+parseV (IntegerL v) = I v
+
+-- How to return Op of different array types?
+parseList :: Exp -> Op [Integer]
+parseList (ListE a) = IL (map (\(LitE (IntegerL e)) -> e) a)
 
 data Op a where 
-    I      :: Int -> Op Int -- all the possible numbers
-    IL     :: [Int] -> Op [Int]
-    Add    :: Op Int -> Op Int -> Op Int
+    I      :: Integer -> Op Integer -- all the possible numbers
+    IL     :: [Integer] -> Op [Integer]
+    Add    :: Op Integer -> Op Integer -> Op Integer
 
 instance (Show a) => Show (Op a) where
     show (I n) = show n
@@ -31,18 +55,16 @@ eval (Add o1 o2) = eval o1 + eval o2
 
 -- lambda
 data LExpr where
-    LAdd :: Op Int -> LExpr
+    LAdd :: Op Integer -> LExpr
 
 instance Show LExpr where
     show (LAdd op) = "(+ " ++ show op ++ ")"
 
-lAddToAdd :: LExpr -> (Op Int -> Op Int)
+lAddToAdd :: LExpr -> (Op Integer -> Op Integer)
 lAddToAdd (LAdd n) = Add n
 
-
-
 -- map
-data Expr = Map (Op [Int]) LExpr (Op [Int])
+data Expr = Map (Op [Integer]) LExpr (Op [Integer])
 
 instance Show Expr where
     show (Map a b c) = "map " ++ show a ++ " " ++ show b ++ " " ++ show c
