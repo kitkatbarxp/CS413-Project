@@ -3,16 +3,45 @@ import Language.Haskell.TH
 import Language.Haskell.Meta.Parse
 import Data.Typeable
 import Language.Haskell.TH.Syntax
+import Control.Monad
+import System.Exit
 
 main :: IO ()
 main = do putStrLn "Please enter source code: "
-          code <- readLn
+          code <- getLine
           let Right ast = parseExp code
           putStrLn $ show $ ast
-          -- putStrLn $ show $ parseAST ast
-          -- following doesn't work yet because of GHC stage restriction
-          -- let exec = $( return (ast) )
-          -- putStrLn $ show exec
+
+          let validStructure = validateASTStructure ast
+          when (not validStructure) exitFailure
+
+          let validType = validateIntegerType ast
+          when (not validType) exitFailure
+
+
+
+-- validate the abstract syntax tree structure
+validateASTStructure :: Exp -> Bool
+validateASTStructure (AppE (AppE (VarE map) (InfixE (Just _) (VarE _) Nothing)) 
+    (ListE list)) = True
+validateASTStructure (AppE (AppE (VarE map) (InfixE Nothing (VarE _) (Just _))) 
+    (ListE list)) = True
+validateASTStructure _ = False
+
+-- type checks
+validateIntegerType :: Exp -> Bool
+validateIntegerType (AppE (AppE _ (InfixE (Just (LitE (IntegerL _))) _ _)) 
+    (ListE xs)) = validateIntegerType' xs
+validateIntegerType (AppE (AppE _ (InfixE _ _ (Just (LitE (IntegerL _)))))
+    (ListE xs)) = validateIntegerType' xs
+validateIntegerType _ = False
+
+-- checks that all elemnts in a list are all Integers
+validateIntegerType' :: [Exp] -> Bool
+validateIntegerType' [] = True
+validateIntegerType' ((LitE (IntegerL _)): xs) = validateIntegerType' xs
+validateIntegerType' _ = False
+
 
 -- Need to check type before this
 -- Need to check if op can run with list type 
