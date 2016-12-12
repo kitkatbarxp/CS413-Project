@@ -10,15 +10,27 @@ main :: IO ()
 main = do putStrLn "Please enter source code: "
           code <- getLine
           let Right ast = parseExp code
-          putStrLn $ show $ ast
-
+            
+          -- checks to make sure AST produced from source code is as expected;
+          -- program quits if not
           let validStructure = validateASTStructure ast
           when (not validStructure) exitFailure
 
+          -- checks to make sure source code deals with Integer type (for now);
+          -- quits if not
           let validType = validateIntegerType ast
           when (not validType) exitFailure
 
-
+          -- turns Exp from source code into our own Expr;
+          -- if conversation/translation is successful, evaluate it step by
+          -- step
+          let result = parseAST ast
+          case result of
+                Nothing -> exitFailure
+                Just x -> run x
+          
+          -- asks user for another line of source code
+          main
 
 -- validate the abstract syntax tree structure
 validateASTStructure :: Exp -> Bool
@@ -43,13 +55,12 @@ validateIntegerType' ((LitE (IntegerL _)): xs) = validateIntegerType' xs
 validateIntegerType' _ = False
 
 
--- Need to check type before this
 -- Need to check if op can run with list type 
 -- Need to lift out of context
 -- How to return null type if constructor gets Nothing - Smart Constructor?
 parseAST :: Exp -> Maybe Expr 
 parseAST (AppE (AppE (VarE map) op) l) = Just (Map (IL []) (parseOP op) (parseList l))
--- parseAST _ = Nothing
+parseAST _ = Nothing
 
 -- What if op is not valid?
 parseOP :: Exp -> LExpr
