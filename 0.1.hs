@@ -1,9 +1,86 @@
-{-# LANGUAGE GADTs, BangPatterns #-}
+{-# LANGUAGE GADTs, BangPatterns, TemplateHaskell #-}
+import Language.Haskell.TH
+import Language.Haskell.Meta.Parse
+import Data.Typeable
+import Language.Haskell.TH.Syntax
+import Control.Monad
+import System.Exit
+
+main :: IO ()
+main = do putStrLn "Please enter source code: "
+          code <- getLine
+          let Right ast = parseExp code
+            
+          -- checks to make sure AST produced from source code is as expected;
+          -- program quits if not
+          let validStructure = validateASTStructure ast
+          when (not validStructure) exitFailure
+
+          -- checks to make sure source code deals with Integer type (for now);
+          -- quits if not
+          let validType = validateIntegerType ast
+          when (not validType) exitFailure
+
+          -- turns Exp from source code into our own Expr;
+          -- if conversation/translation is successful, evaluate it step by
+          -- step
+          let result = parseAST ast
+          case result of
+                Nothing -> exitFailure
+                Just x -> run x
+          
+          -- asks user for another line of source code
+          main
+
+-- validate the abstract syntax tree structure
+validateASTStructure :: Exp -> Bool
+validateASTStructure (AppE (AppE (VarE map) (InfixE (Just _) (VarE _) Nothing)) 
+    (ListE list)) = True
+validateASTStructure (AppE (AppE (VarE map) (InfixE Nothing (VarE _) (Just _))) 
+    (ListE list)) = True
+validateASTStructure _ = False
+
+-- type checks
+validateIntegerType :: Exp -> Bool
+validateIntegerType (AppE (AppE _ (InfixE (Just (LitE (IntegerL _))) _ _)) 
+    (ListE xs)) = validateIntegerType' xs
+validateIntegerType (AppE (AppE _ (InfixE _ _ (Just (LitE (IntegerL _)))))
+    (ListE xs)) = validateIntegerType' xs
+validateIntegerType _ = False
+
+-- checks that all elemnts in a list are all Integers
+validateIntegerType' :: [Exp] -> Bool
+validateIntegerType' [] = True
+validateIntegerType' ((LitE (IntegerL _)): xs) = validateIntegerType' xs
+validateIntegerType' _ = False
+
+
+-- Need to check if op can run with list type 
+-- Need to lift out of context
+-- How to return null type if constructor gets Nothing - Smart Constructor?
+parseAST :: Exp -> Maybe Expr 
+parseAST (AppE (AppE (VarE map) op) l) = Just (Map (IL []) (parseOP op) (parseList l))
+parseAST _ = Nothing
+
+-- What if op is not valid?
+parseOP :: Exp -> LExpr
+parseOP (InfixE Nothing (VarE (+)) (Just (LitE v))) = LAdd (parseV v)
+parseOP (InfixE (Just (LitE v)) (VarE (+)) Nothing) = LAdd (parseV v)
+-- parseOP _ = Nothing
+
+-- TH variable to custom data type
+-- How to return Op of different type?
+parseV :: Lit -> Op Integer
+parseV (IntegerL v) = I v
+
+-- How to return Op of different array types?
+parseList :: Exp -> Op [Integer]
+parseList (ListE a) = IL (map (\(LitE (IntegerL e)) -> e) a)
 
 data Op a where 
-    I      :: Int -> Op Int -- all the possible numbers
-    IL     :: [Int] -> Op [Int]
-    Add    :: Op Int -> Op Int -> Op Int
+    I      :: Integer -> Op Integer -- all the possible numbers
+    IL     :: [Integer] -> Op [Integer]
+    Add    :: Op Integer -> Op Integer -> Op Integer
 
 instance (Show a) => Show (Op a) where
     show (I n) = show n
@@ -18,18 +95,16 @@ eval (Add o1 o2) = eval o1 + eval o2
 
 -- lambda
 data LExpr where
-    LAdd :: Op Int -> LExpr
+    LAdd :: Op Integer -> LExpr
 
 instance Show LExpr where
     show (LAdd op) = "(+ " ++ show op ++ ")"
 
-lAddToAdd :: LExpr -> (Op Int -> Op Int)
+lAddToAdd :: LExpr -> (Op Integer -> Op Integer)
 lAddToAdd (LAdd n) = Add n
 
-
-
 -- map
-data Expr = Map (Op [Int]) LExpr (Op [Int])
+data Expr = Map (Op [Integer]) LExpr (Op [Integer])
 
 instance Show Expr where
     show (Map a b c) = "map " ++ show a ++ " " ++ show b ++ " " ++ show c
@@ -61,4 +136,3 @@ run m@(Map cur lExp args) = do
     run state
 
 m = Map (IL []) (LAdd (I 10)) (IL [1,2,3,4])
-
