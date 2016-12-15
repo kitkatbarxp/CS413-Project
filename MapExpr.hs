@@ -26,6 +26,8 @@ data MapOp a where
     NEql  :: MapOp Integer -> MapOp Integer -> MapOp Bool
     GreatEqF :: MapOp Integer -> MapOp Integer -> MapOp Bool 
     GreatEqS :: MapOp Integer -> MapOp Integer -> MapOp Bool
+    LessEqF :: MapOp Integer -> MapOp Integer -> MapOp Bool 
+    LessEqS :: MapOp Integer -> MapOp Integer -> MapOp Bool
 
     DivdF :: MapOp Double -> MapOp Double -> MapOp Double
     DivdS :: MapOp Double -> MapOp Double -> MapOp Double
@@ -49,6 +51,8 @@ instance (Show a) => Show (MapOp a) where
     show (NEql o1 o2) = show o1 ++ " /= " ++ show o2
     show (GreatEqF o1 o2)  = show o1 ++ " >= " ++ show o2
     show (GreatEqS o1 o2)  = show o2 ++ " >= " ++ show o1
+    show (LessEqF o1 o2)  = show o1 ++ " <= " ++ show o2
+    show (LessEqS o1 o2)  = show o2 ++ " <= " ++ show o1
 
     show (DivdF o1 o2) = show o1 ++ " / " ++ show o2
     show (DivdS o1 o2) = show o2 ++ " / " ++ show o1
@@ -71,6 +75,8 @@ eval (Eql o1 o2)   = eval o2 == eval o1
 eval (NEql o1 o2)  = eval o1 /= eval o2
 eval (GreatEqF o1 o2)  = eval o1 >= eval o2
 eval (GreatEqS o1 o2)  = eval o2 >= eval o1
+eval (LessEqF o1 o2)  = eval o1 <= eval o2
+eval (LessEqS o1 o2)  = eval o2 <= eval o1
 
 eval (DivdF o1 o2) = eval o1 / eval o2
 eval (DivdS o1 o2) = eval o2 / eval o1
@@ -89,6 +95,8 @@ data LExpr where
     LNEql     :: MapOp Integer -> LExpr
     LGreatEqF :: MapOp Integer -> LExpr
     LGreatEqS :: MapOp Integer -> LExpr
+    LLessEqF  :: MapOp Integer -> LExpr
+    LLessEqS  :: MapOp Integer -> LExpr
 
     LDivdF :: MapOp Double -> LExpr
     LDivdS :: MapOp Double -> LExpr
@@ -106,6 +114,8 @@ instance Show LExpr where
     show (LNEql op)  = "(/=" ++ show op ++ ")"
     show (LGreatEqF op) = "(" ++ show op ++ ">=)"
     show (LGreatEqS op) = "(>=" ++ show op ++ ")"
+    show (LLessEqF op) = "(" ++ show op ++ "<=)"
+    show (LLessEqS op) = "(<=" ++ show op ++ ")"
 
     show (LDivdF op) = "(" ++ show op ++ "/)"
     show (LDivdS op) = "(/" ++ show op ++ ")"
@@ -125,6 +135,8 @@ convertBLExprToExpr (LGreatF n)   = GreatF n
 convertBLExprToExpr (LGreatS n)   = GreatS n
 convertBLExprToExpr (LGreatEqF n) = GreatEqF n
 convertBLExprToExpr (LGreatEqS n) = GreatEqS n
+convertBLExprToExpr (LLessEqF n)  = LessEqF n
+convertBLExprToExpr (LLessEqS n)  = LessEqS n
 
 convertDLExprToExpr :: LExpr -> (MapOp Double -> MapOp Double)
 convertDLExprToExpr (LDivdF n) = DivdF n
