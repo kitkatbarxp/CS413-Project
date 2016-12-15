@@ -18,60 +18,90 @@ data MapOp a where
     Mult  :: MapOp Integer -> MapOp Integer -> MapOp Integer
     Subt  :: MapOp Integer -> MapOp Integer -> MapOp Integer
     
+    LessF :: MapOp Integer -> MapOp Integer -> MapOp Bool
+    LessS :: MapOp Integer -> MapOp Integer -> MapOp Bool
     Eql   :: MapOp Integer -> MapOp Integer -> MapOp Bool
+    NEql  :: MapOp Integer -> MapOp Integer -> MapOp Bool
 
     DivdF :: MapOp Double -> MapOp Double -> MapOp Double
     DivdS :: MapOp Double -> MapOp Double -> MapOp Double
 
 
 instance (Show a) => Show (MapOp a) where
-    show (I n) = show n
+    show (I n)  = show n
     show (IL l) = show l
-    show (D n) = show n
+    show (D n)  = show n
     show (DL l) = show l
-    show (Add o1 o2) = show o1 ++ " + " ++ show o2
-    show (Mult o1 o2) = show o1 ++ " * " ++ show o2
-    show (Subt o1 o2) = show o1 ++ " - " ++ show o2
+
+    show (Add o1 o2)  = show o1 ++ " + " ++ show o2
+    show (Mult o1 o2)  = show o1 ++ " * " ++ show o2
+    show (Subt o1 o2)  = show o1 ++ " - " ++ show o2
+    
+    show (LessF o1 o2)  = show o1 ++ " < " ++ show o2
+    show (LessS o1 o2)  = show o2 ++ " < " ++ show o1
+    show (Eql o1 o2)   = show o1 ++ " == " ++ show o2
+    show (NEql o1 o2) = show o1 ++ " /= " ++ show o2
+
     show (DivdF o1 o2) = show o1 ++ " / " ++ show o2
     show (DivdS o1 o2) = show o2 ++ " / " ++ show o1
-    show (Eql o1 o2) = show o1 ++ " == " ++ show o2
+    
 
 eval :: MapOp a -> a
-eval (I n) = n
+eval (I n)  = n
 eval (IL l) = l
-eval (D n) = n
+eval (D n)  = n
 eval (DL l) = l
-eval (Add o1 o2) = eval o1 + eval o2
-eval (Mult o1 o2) = eval o1 * eval o2
-eval (Subt o1 o2) = eval o1 - eval o2
+
+eval (Add o1 o2)   = eval o1 + eval o2
+eval (Mult o1 o2)  = eval o1 * eval o2
+eval (Subt o1 o2)  = eval o1 - eval o2
+
+eval (LessF o1 o2)  = eval o1 < eval o2
+eval (LessS o1 o2)  = eval o2 < eval o1
+eval (Eql o1 o2)   = eval o2 == eval o1
+eval (NEql o1 o2)  = eval o1 /= eval o2
+
 eval (DivdF o1 o2) = eval o1 / eval o2
 eval (DivdS o1 o2) = eval o2 / eval o1
-eval (Eql o1 o2) = eval o2 == eval o1
 
 -- lambda
 data LExpr where
     LAdd   :: MapOp Integer -> LExpr
     LMult  :: MapOp Integer -> LExpr
     LSubt  :: MapOp Integer -> LExpr
+
+    LLessF :: MapOp Integer -> LExpr
+    LLessS :: MapOp Integer -> LExpr
+    LEql   :: MapOp Integer -> LExpr
+    LNEql  :: MapOp Integer -> LExpr
+
     LDivdF :: MapOp Double -> LExpr
     LDivdS :: MapOp Double -> LExpr
-    LEql   :: MapOp Integer -> LExpr
 
 instance Show LExpr where
     show (LAdd op)   = "(+ " ++ show op ++ ")"
     show (LMult op)  = "(* " ++ show op ++ ")"
     show (LSubt op)  = "(" ++ show op ++ "-)"
+
+    show (LLessF op) = "(" ++ show op ++ "<)"
+    show (LLessS op) = "(<" ++ show op ++ ")"
+    show (LEql op)   = "(==" ++ show op ++ ")"
+    show (LNEql op)  = "(/=" ++ show op ++ ")"
+
     show (LDivdF op) = "(" ++ show op ++ "/)"
     show (LDivdS op) = "(/" ++ show op ++ ")"
-    show (LEql op)   = "(==" ++ show op ++ ")"
+    
 
 convertILExprToExpr :: LExpr -> (MapOp Integer -> MapOp Integer)
-convertILExprToExpr (LAdd n) = Add n
+convertILExprToExpr (LAdd n)  = Add n
 convertILExprToExpr (LMult n) = Mult n
 convertILExprToExpr (LSubt n) = Subt n
 
 convertBLExprToExpr :: LExpr -> (MapOp Integer -> MapOp Bool)
-convertBLExprToExpr (LEql n) = Eql n
+convertBLExprToExpr (LEql n)  = Eql n
+convertBLExprToExpr (LNEql n) = NEql n
+convertBLExprToExpr (LLessF n) = LessF n
+convertBLExprToExpr (LLessS n) = LessS n
 
 convertDLExprToExpr :: LExpr -> (MapOp Double -> MapOp Double)
 convertDLExprToExpr (LDivdF n) = DivdF n

@@ -143,7 +143,7 @@ run e@(Filter m@(IFilter cur lExp args)) = do
               ++ " "  ++ show remainder
             putStrLn $ "   4. " ++ show bc ++ " : filter " ++ show lExp
               ++ " "  ++ show remainder ++ "\n"
-              
+
     run state
 
 
