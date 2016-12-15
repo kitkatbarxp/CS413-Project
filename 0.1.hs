@@ -11,6 +11,7 @@ main = do putStrLn "Please enter source code: "
           code <- getLine
           let Right ast = parseExp code
             
+          putStrLn $ show ast
           -- checks to make sure AST produced from source code is as expected;
           -- program quits if not
           let validStructure = validateASTStructure ast
@@ -20,6 +21,11 @@ main = do putStrLn "Please enter source code: "
           -- quits if not
           let validType = validateIntegerType ast
           when (not validType) exitFailure
+
+          -- checks to make sure source code uses the addition operator;
+          -- quits if not
+          let validOp = validateOp ast
+          when (not validOp) exitFailure
 
           -- turns Exp from source code into our own Expr;
           -- if conversation/translation is successful, evaluate it step by
@@ -47,6 +53,10 @@ validateIntegerType (AppE (AppE _ (InfixE (Just (LitE (IntegerL _))) _ _))
 validateIntegerType (AppE (AppE _ (InfixE _ _ (Just (LitE (IntegerL _)))))
     (ListE xs)) = validateIntegerType' xs
 validateIntegerType _ = False
+
+-- validates the operation
+validateOp :: Exp -> Bool
+validateOp (AppE (AppE _ (InfixE _ x _)) _) = x == VarE (mkName "+")
 
 -- checks that all elemnts in a list are all Integers
 validateIntegerType' :: [Exp] -> Bool
