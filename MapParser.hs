@@ -43,12 +43,12 @@ validateOp :: Exp -> Bool
 validateOp (AppE (AppE _ (InfixE _ (VarE x) _)) _) = x == mkName "+"
                                                   || x == mkName "*"
                                                   || x == mkName "-"
-                                                  || x == mkName "/"                                                                       
+                                                  || x == mkName "/"
 
 -- Parsing stuff
 parseAST :: Exp -> Expr
 parseAST (AppE (AppE (VarE func) op@(InfixE _ (VarE x) _)) l) 
-    | func == mkName "map" && x /= mkName "/" = IMap (IL []) (parseOP op) (parseIList l)
+  | func == mkName "map" && x /= mkName "/" = Map (IMap (IL []) (parseOP op) (parseIList l))
     -- | func == mkName "map" && x == mkName "/" = DMap (DL []) (parseOP op) (parseDList l)
 
 parseOP :: Exp -> LExpr

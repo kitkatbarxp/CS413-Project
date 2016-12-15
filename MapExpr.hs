@@ -76,8 +76,8 @@ convertDLExprToExpr (LDivdF n) = DivdF n
 convertDLExprToExpr (LDivdS n) = DivdS n
 
 -- map
-data Expr = MapExpr
-          | FilExpr
+data Expr = Map MapExpr
+          | Filter FilExpr
 
 data MapExpr = IMap (MapOp [Integer]) LExpr (MapOp [Integer])
              | DMap (MapOp [Double]) LExpr (MapOp [Double])

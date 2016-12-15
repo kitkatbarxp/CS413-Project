@@ -53,31 +53,33 @@ main = do putStrLn "Please enter source code: "
           main
 
 nextState :: Expr -> Expr
-nextState a@(IMap _ _ (IL [])) = a
-nextState m@(IMap cur lExp args) = IMap (IL (baseCase ++ [ eval . exp $ nextVal ]))
-                                 lExp (IL remainder)
-    where baseCase = eval cur
-          nextVal  = I (head (eval args))
+nextState a@(Map (IMap _ _ (IL []))) = a
+nextState m@(Map (IMap cur lExp args)) = Map iMap
+    where baseCase  = eval cur
+          nextVal   = I (head (eval args))
           remainder = drop 1 (eval args)
-          exp = convertILExprToExpr lExp
-nextState m@(DMap cur lExp args) = DMap (DL (baseCase ++ [ eval . exp $ nextVal ]))
-                                 lExp (DL remainder)
-    where baseCase = eval cur
-          nextVal  = D (head (eval args))
+          exp       = convertILExprToExpr lExp
+          iMap      = IMap (IL (baseCase ++ [ eval . exp $ nextVal ])) lExp
+                        (IL remainder)
+nextState m@(Map (DMap cur lExp args)) = Map dMap
+    where baseCase  = eval cur
+          nextVal   = D (head (eval args))
           remainder = drop 1 (eval args)
-          exp = convertDLExprToExpr lExp
+          exp       = convertDLExprToExpr lExp
+          dMap      = DMap (DL (baseCase ++ [ eval . exp $ nextVal ])) lExp
+                        (DL remainder)
 
 -- run prints the current state and calculates the next state
 run :: Expr -> IO ()
-run (IMap cur _ (IL [])) = putStrLn $ show cur
-run m@(IMap cur lExp args) = do
+run (Map (IMap cur _ (IL []))) = putStrLn $ show cur
+run e@(Map m@(IMap cur lExp args)) = do
     let bc = eval cur
     let nextVal = I (head (eval args))
     let remainder = drop 1 (eval args)
     let op = convertILExprToExpr lExp
     let exp = op nextVal
     let evalExp = eval exp
-    let state = nextState m
+    let state = nextState e
 
     putStrLn $ show m
     putStrLn $ "   1. " ++ show bc ++ " : " ++ show exp ++ " : map "
