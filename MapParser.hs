@@ -9,7 +9,7 @@
 module MapParser where
 
 import Language.Haskell.TH
-
+import GHC.Num
 import MapExpr
 
 -- input validation stuff: validateASTStructure
@@ -19,9 +19,9 @@ import MapExpr
 -- validates the abstract syntax tree structure
 validateASTStructure :: Exp -> Bool
 validateASTStructure (AppE (AppE (VarE map) (InfixE (Just _) (VarE _) Nothing))
-   (ListE list)) = True
+   (ListE list)) = map == mkName "map"
 validateASTStructure (AppE (AppE (VarE map) (InfixE Nothing (VarE _) (Just _)))
-   (ListE list)) = True
+   (ListE list)) = map == mkName "map"
 validateASTStructure _ = False
 
 -- type checks                                                                  
@@ -41,26 +41,39 @@ validateIntegerType' _ = False
 -- validates operation
 validateOp :: Exp -> Bool
 validateOp (AppE (AppE _ (InfixE _ (VarE x) _)) _) = x == mkName "+"
-                                                   || x == mkName "*"
-
+                                                  || x == mkName "*"
+                                                  || x == mkName "-"
+                                                  || x == mkName "/"                                                                       
 
 -- Parsing stuff
-parseAST :: Exp -> MapExpr
-parseAST (AppE (AppE (VarE map) op) l) = Map (IL []) (parseOP op) (parseList l)
+parseAST :: Exp -> Expr
+parseAST (AppE (AppE (VarE func) op@(InfixE _ (VarE x) _)) l) 
+    | func == mkName "map" && x /= mkName "/" = IMap (IL []) (parseOP op) (parseIList l)
+    -- | func == mkName "map" && x == mkName "/" = DMap (DL []) (parseOP op) (parseDList l)
 
 parseOP :: Exp -> LExpr
 parseOP (InfixE Nothing (VarE x) (Just (LitE v)))
-    | x == mkName "+" = LAdd (parseV v)
-    | otherwise       = LMult (parseV v)
+    | x == mkName "+" = LAdd   (parseIV v)
+    | x == mkName "*" = LMult  (parseIV v)
+    | x == mkName "-" = LSubt  (parseIV v)
+    | x == mkName "/" = LDivdS (parseDV v)
 parseOP (InfixE (Just (LitE v)) (VarE x) Nothing)
-    | x == mkName "+" = LAdd (parseV v)
-    | otherwise       = LMult (parseV v)
+    | x == mkName "+" = LAdd   (parseIV v)
+    | x == mkName "*" = LMult  (parseIV v)
+    | x == mkName "-" = LSubt  (parseIV v)
+    | x == mkName "/" = LDivdF (parseDV v)
 
 -- TH variable to custom data type
 -- How to return Op of different type?
-parseV :: Lit -> MapOp Integer
-parseV (IntegerL v) = I v
+parseIV :: Lit -> MapOp Integer
+parseIV (IntegerL v) = I v
+
+parseDV :: Lit -> MapOp Double
+parseDV (IntegerL v) = D (fromIntegral v)
 
 -- How to return Op of different array types?
-parseList :: Exp -> MapOp [Integer]
-parseList (ListE a) = IL (map (\(LitE (IntegerL e)) -> e) a)
+parseIList :: Exp -> MapOp [Integer]
+parseIList (ListE a) = IL (map (\(LitE (IntegerL e)) -> e) a)
+
+parseDList :: Exp -> MapOp [Double]
+parseDList (ListE a) = DL (map (\(LitE (IntegerL e)) -> fromIntegral e) a)
