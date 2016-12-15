@@ -47,6 +47,7 @@ validateOp (AppE (AppE _ (InfixE _ (VarE x) _)) _) = x == mkName "+"
                                                   || x == mkName "=="
                                                   || x == mkName "/="
                                                   || x == mkName "<"
+                                                  || x == mkName ">"
 
 -- Parsing stuff
 parseAST :: Exp -> Expr
@@ -57,7 +58,7 @@ parseAST (AppE (AppE (VarE func) op@(InfixE _ (VarE x) _)) l)
   | func == mkName "map" && x == mkName "/" 
       = Map (DMap (DL []) (parseOP op) (parseDList l))
   | func == mkName "filter" && 
-     (x == mkName "==" || x == mkName "/=" || x == mkName "<")
+     (x == mkName "==" || x == mkName "/=" || x == mkName "<" || x == mkName ">")
       = Filter (IFilter (IL []) (parseOP op) (parseIList l))
 
 parseOP :: Exp -> LExpr
@@ -69,6 +70,7 @@ parseOP (InfixE Nothing (VarE x) (Just (LitE v)))
     | x == mkName "==" = LEql   (parseIV v)
     | x == mkName "/=" = LNEql  (parseIV v)
     | x == mkName "<"  = LLessS  (parseIV v)
+    | x == mkName ">"  = LGreatS  (parseIV v)
 parseOP (InfixE (Just (LitE v)) (VarE x) Nothing)
     | x == mkName "+"  = LAdd   (parseIV v)
     | x == mkName "*"  = LMult  (parseIV v)
@@ -76,7 +78,7 @@ parseOP (InfixE (Just (LitE v)) (VarE x) Nothing)
     | x == mkName "/"  = LDivdF (parseDV v)
     | x == mkName "==" = LEql   (parseIV v)
     | x == mkName "/=" = LNEql  (parseIV v)
-    | x == mkName "<"  = LLessF  (parseIV v)
+    | x == mkName ">"  = LGreatF  (parseIV v)
 
 -- TH variable to custom data type
 -- How to return Op of different type?
