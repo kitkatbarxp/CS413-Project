@@ -11,21 +11,29 @@ main = do putStrLn "Please enter source code: "
           code <- getLine
           let Right ast = parseExp code
             
-          putStrLn $ show ast
           -- checks to make sure AST produced from source code is as expected;
           -- program quits if not
           let validStructure = validateASTStructure ast
-          when (not validStructure) exitFailure
+          if (not validStructure)
+             then do putStrLn "Unexpected src code format. Please try again.\n"
+                     main
+          else do putStrLn "Structure: check."
 
           -- checks to make sure source code deals with Integer type (for now);
           -- quits if not
           let validType = validateIntegerType ast
-          when (not validType) exitFailure
+          if (not validType)
+             then do putStrLn "Invalid type. Please try again.\n"
+                     main
+          else do putStrLn "Type: check."
 
           -- checks to make sure source code uses the addition operator;
           -- quits if not
           let validOp = validateOp ast
-          when (not validOp) exitFailure
+          if (not validOp)
+             then do putStrLn "Invalid operation. Please try again.\n"
+                     main
+          else do putStrLn "Operation: check."
 
           -- turns Exp from source code into our own Expr;
           -- if conversation/translation is successful, evaluate it step by
