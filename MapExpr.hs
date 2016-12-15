@@ -34,6 +34,7 @@ instance (Show a) => Show (MapOp a) where
     show (Subt o1 o2) = show o1 ++ " - " ++ show o2
     show (DivdF o1 o2) = show o1 ++ " / " ++ show o2
     show (DivdS o1 o2) = show o2 ++ " / " ++ show o1
+    show (Eql o1 o2) = show o1 ++ " == " ++ show o2
 
 eval :: MapOp a -> a
 eval (I n) = n
@@ -57,11 +58,12 @@ data LExpr where
     LEql   :: MapOp Integer -> LExpr
 
 instance Show LExpr where
-    show (LAdd op) = "(+ " ++ show op ++ ")"
-    show (LMult op) = "(* " ++ show op ++ ")"
-    show (LSubt op) = "(" ++ show op ++ "-)"
+    show (LAdd op)   = "(+ " ++ show op ++ ")"
+    show (LMult op)  = "(* " ++ show op ++ ")"
+    show (LSubt op)  = "(" ++ show op ++ "-)"
     show (LDivdF op) = "(" ++ show op ++ "/)"
     show (LDivdS op) = "(/" ++ show op ++ ")"
+    show (LEql op)   = "(==" ++ show op ++ ")"
 
 convertILExprToExpr :: LExpr -> (MapOp Integer -> MapOp Integer)
 convertILExprToExpr (LAdd n) = Add n
@@ -79,11 +81,18 @@ convertDLExprToExpr (LDivdS n) = DivdS n
 data Expr = Map MapExpr
           | Filter FilExpr
 
+instance Show Expr where
+    show (Map m)    = show m
+    show (Filter f) = show f
+
 data MapExpr = IMap (MapOp [Integer]) LExpr (MapOp [Integer])
              | DMap (MapOp [Double]) LExpr (MapOp [Double])
-
-data FilExpr = IFilter (MapOp [Integer]) LExpr (MapOp [Integer])
 
 instance Show MapExpr where
     show (IMap a b c) = "map " ++ show a ++ " " ++ show b ++ " " ++ show c
     show (DMap a b c) = "map " ++ show a ++ " " ++ show b ++ " " ++ show c
+
+data FilExpr = IFilter (MapOp [Integer]) LExpr (MapOp [Integer])
+
+instance Show FilExpr where
+    show (IFilter a b c) = "filter " ++ show a ++ " " ++ show b ++ " " ++ show c

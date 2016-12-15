@@ -18,10 +18,10 @@ import MapExpr
 
 -- validates the abstract syntax tree structure
 validateASTStructure :: Exp -> Bool
-validateASTStructure (AppE (AppE (VarE map) (InfixE (Just _) (VarE _) Nothing))
-   (ListE list)) = map == mkName "map"
-validateASTStructure (AppE (AppE (VarE map) (InfixE Nothing (VarE _) (Just _)))
-   (ListE list)) = map == mkName "map"
+validateASTStructure (AppE (AppE (VarE name) (InfixE (Just _) (VarE _) Nothing)) 
+  (ListE list)) = name == mkName "map" || name == mkName "filter"
+validateASTStructure (AppE (AppE (VarE name) (InfixE Nothing (VarE _) (Just _)))
+   (ListE list)) = name == mkName "map" || name == mkName "filter"
 validateASTStructure _ = False
 
 -- type checks                                                                  
@@ -44,24 +44,28 @@ validateOp (AppE (AppE _ (InfixE _ (VarE x) _)) _) = x == mkName "+"
                                                   || x == mkName "*"
                                                   || x == mkName "-"
                                                   || x == mkName "/"
+                                                  || x == mkName "=="
 
 -- Parsing stuff
 parseAST :: Exp -> Expr
 parseAST (AppE (AppE (VarE func) op@(InfixE _ (VarE x) _)) l) 
-  | func == mkName "map" && x /= mkName "/" = Map (IMap (IL []) (parseOP op) (parseIList l))
-    -- | func == mkName "map" && x == mkName "/" = DMap (DL []) (parseOP op) (parseDList l)
+  | func == mkName "map" && (x == mkName "-" || x == mkName "+") = Map (IMap (IL []) (parseOP op) (parseIList l))
+  | func == mkName "map" && x == mkName "/" = Map (DMap (DL []) (parseOP op) (parseDList l))
+  | func == mkName "filter" && x == mkName "==" = Filter (IFilter (IL []) (parseOP op) (parseIList l))
 
 parseOP :: Exp -> LExpr
 parseOP (InfixE Nothing (VarE x) (Just (LitE v)))
-    | x == mkName "+" = LAdd   (parseIV v)
-    | x == mkName "*" = LMult  (parseIV v)
-    | x == mkName "-" = LSubt  (parseIV v)
-    | x == mkName "/" = LDivdS (parseDV v)
+    | x == mkName "+"  = LAdd   (parseIV v)
+    | x == mkName "*"  = LMult  (parseIV v)
+    | x == mkName "-"  = LSubt  (parseIV v)
+    | x == mkName "/"  = LDivdS (parseDV v)
+    | x == mkName "==" = LEql   (parseIV v)
 parseOP (InfixE (Just (LitE v)) (VarE x) Nothing)
-    | x == mkName "+" = LAdd   (parseIV v)
-    | x == mkName "*" = LMult  (parseIV v)
-    | x == mkName "-" = LSubt  (parseIV v)
-    | x == mkName "/" = LDivdF (parseDV v)
+    | x == mkName "+"  = LAdd   (parseIV v)
+    | x == mkName "*"  = LMult  (parseIV v)
+    | x == mkName "-"  = LSubt  (parseIV v)
+    | x == mkName "/"  = LDivdF (parseDV v)
+    | x == mkName "==" = LEql   (parseIV v)
 
 -- TH variable to custom data type
 -- How to return Op of different type?

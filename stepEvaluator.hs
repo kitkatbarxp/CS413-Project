@@ -53,7 +53,6 @@ main = do putStrLn "Please enter source code: "
           main
 
 nextState :: Expr -> Expr
-nextState a@(Map (IMap _ _ (IL []))) = a
 nextState m@(Map (IMap cur lExp args)) = Map iMap
     where baseCase  = eval cur
           nextVal   = I (head (eval args))
@@ -68,6 +67,14 @@ nextState m@(Map (DMap cur lExp args)) = Map dMap
           exp       = convertDLExprToExpr lExp
           dMap      = DMap (DL (baseCase ++ [ eval . exp $ nextVal ])) lExp
                         (DL remainder)
+nextState m@(Filter (IFilter cur lExp args)) = Filter iFil
+    where baseCase  = eval cur
+          nextVal   = I (head (eval args))
+          remainder = drop 1 (eval args)
+          predicate = convertBLExprToExpr lExp
+          result    = eval . predicate $ nextVal
+          iFil      = IFilter (IL ((\r -> if r then baseCase ++ [ eval $ nextVal ] else baseCase) result)) lExp
+                        (IL remainder)
 
 -- run prints the current state and calculates the next state
 run :: Expr -> IO ()
@@ -90,39 +97,54 @@ run e@(Map m@(IMap cur lExp args)) = do
                ++ " "  ++ show remainder ++ "\n"
     run state
 
--- run (DMap cur _ (DL [])) = putStrLn $ show cur
--- run m@(DMap cur lExp args) = do
---     let bc = eval cur
---     let nextVal = D (head (eval args))
---     let remainder = drop 1 (eval args)
---     let op = convertDLExprToExpr lExp
---     let exp = op nextVal
---     let evalExp = eval exp
---     let state = nextState m
+run (Map (DMap cur _ (DL []))) = putStrLn $ show cur
+run e@(Map m@(DMap cur lExp args)) = do
+    let bc = eval cur
+    let nextVal = D (head (eval args))
+    let remainder = drop 1 (eval args)
+    let op = convertDLExprToExpr lExp
+    let exp = op nextVal
+    let evalExp = eval exp
+    let state = nextState e
 
---     putStrLn $ show m
---     putStrLn $ "   1. " ++ show bc ++ " : " ++ show exp ++ " : map "
---                ++ show lExp ++ " " ++ show remainder 
---     putStrLn $ "   2. " ++ show bc ++ " : " ++ show evalExp ++ " : map "
---                ++ show lExp ++ " " ++ show remainder
---     putStrLn $ "   3. " ++ show (bc ++ [evalExp]) ++ " : map " ++ show lExp
---                ++ " "  ++ show remainder ++ "\n"
---     run state
+    putStrLn $ show m
+    putStrLn $ "   1. " ++ show bc ++ " : " ++ show exp ++ " : map "
+               ++ show lExp ++ " " ++ show remainder 
+    putStrLn $ "   2. " ++ show bc ++ " : " ++ show evalExp ++ " : map "
+               ++ show lExp ++ " " ++ show remainder
+    putStrLn $ "   3. " ++ show (bc ++ [evalExp]) ++ " : map " ++ show lExp
+               ++ " "  ++ show remainder ++ "\n"
+    run state
 
--- run (IFilter cur _ (IL [])) = putStrLn $ show cur
--- run m@(IFilter cur lExp args) = do
---     let bc = eval cur
---     let nextVal = I (head (eval args))
---     let remainder = drop 1 (eval args)
+run (Filter (IFilter cur _ (IL []))) = putStrLn $ show cur
+run e@(Filter m@(IFilter cur lExp args)) = do
+    let bc = eval cur
+    let nextVal = I (head (eval args))
+    let remainder = drop 1 (eval args)
 
---     putStrLn $ "hi"
+    let predicate = convertBLExprToExpr lExp
+    let exp = predicate $ nextVal
+    let result = eval exp
+    let state = nextState e
 
-    -- let predicate = convertBLExprToExpr lExp
-    -- let result = eval . predicate $ nextVal
-    -- let state = nextState m
-
-    -- putStrLn $ show result
-    -- putStrLn $ show state
+    putStrLn $ show m
+    putStrLn $ "   1. " ++ show bc ++ " : " ++ show exp ++ " : filter "
+              ++ show lExp ++ " " ++ show remainder 
+    putStrLn $ "   2. " ++ show bc ++ " : " ++ show result ++ " : filter "
+              ++ show lExp ++ " " ++ show remainder
+    if (result)
+      then do
+            putStrLn $ "   3. " ++ show bc ++ " : " ++ show nextVal ++ " : filter " ++ show lExp
+              ++ " "  ++ show remainder
+            putStrLn $ "   4. " ++ show (bc ++ [eval nextVal]) ++ " : filter " ++ show lExp
+              ++ " "  ++ show remainder ++ "\n"
+      else do
+            putStrLn $ "   3. " ++ show bc ++ " : None : filter " ++ show lExp
+              ++ " "  ++ show remainder
+            putStrLn $ "   4. " ++ show bc ++ " : filter " ++ show lExp
+              ++ " "  ++ show remainder ++ "\n"
+              
+    run state
 
 
 
