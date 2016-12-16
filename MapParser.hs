@@ -9,7 +9,6 @@
 module MapParser where
 
 import Language.Haskell.TH
-import GHC.Num
 import MapExpr
 
 -- input validation stuff: validateASTStructure
