@@ -131,19 +131,16 @@ run e@(Map m@(BMap cur lExp args)) = do
     
     let predicate = convertBLExprToExpr lExp
     let exp = predicate nextVal
-    let evalExp = eval exp
+    let result = eval exp
     let state = nextState e
 
-    putStrLn "Hello"
-    putStrLn $ show e
-    putStrLn $ show state
-    -- putStrLn $ show m
-    -- putStrLn $ "   1. " ++ show bc ++ " : " ++ show exp ++ " : map "
-    --            ++ show lExp ++ " " ++ show remainder 
-    -- putStrLn $ "   2. " ++ show bc ++ " : " ++ show evalExp ++ " : map "
-    --            ++ show lExp ++ " " ++ show remainder
-    -- putStrLn $ "   3. " ++ show (bc ++ [evalExp]) ++ " : map " ++ show lExp
-    --            ++ " "  ++ show remainder ++ "\n"
+    putStrLn $ show m
+    putStrLn $ "   1. " ++ show bc ++ " : " ++ show exp ++ " : map "
+               ++ show lExp ++ " " ++ show remainder 
+    putStrLn $ "   2. " ++ show bc ++ " : " ++ show result ++ " : map "
+               ++ show lExp ++ " " ++ show remainder
+    putStrLn $ "   3. " ++ show (bc ++ [result]) ++ " : map " ++ show lExp
+               ++ " "  ++ show remainder ++ "\n"
     run state
 
 run (Filter (IFilter cur _ (IL []))) = putStrLn $ show cur

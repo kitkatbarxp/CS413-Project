@@ -56,12 +56,14 @@ parseAST (AppE (AppE (VarE func) op@(InfixE _ (VarE x) _)) l)
   | func == mkName "map" && 
     (x == mkName "-" || x == mkName "+") 
       = Map (IMap (IL []) (parseOP op) (parseIList l))
-  | func == mkName "map" && x == mkName "==" 
+  | func == mkName "map" && 
+    (x == mkName "==" || x == mkName "/=" || x == mkName "<" || 
+      x == mkName ">" || x == mkName ">=" || x == mkName "<=")
       = Map (BMap (BL []) (parseOP op) (parseIList l))
   | func == mkName "map" && x == mkName "/" 
       = Map (DMap (DL []) (parseOP op) (parseDList l))
   | func == mkName "filter" && 
-     (x == mkName "==" || x == mkName "/=" || x == mkName "<" || 
+    (x == mkName "==" || x == mkName "/=" || x == mkName "<" || 
       x == mkName ">" || x == mkName ">=" || x == mkName "<=")
       = Filter (IFilter (IL []) (parseOP op) (parseIList l))
 
