@@ -13,21 +13,22 @@ data MapOp a where
     D     :: Double -> MapOp Double
     IL    :: [Integer] -> MapOp [Integer]
     DL    :: [Double]  -> MapOp [Double]
+    BL    :: [Bool]  -> MapOp [Bool]
 
     Add   :: MapOp Integer -> MapOp Integer -> MapOp Integer
     Mult  :: MapOp Integer -> MapOp Integer -> MapOp Integer
     Subt  :: MapOp Integer -> MapOp Integer -> MapOp Integer
     
-    LessF :: MapOp Integer -> MapOp Integer -> MapOp Bool 
-    LessS :: MapOp Integer -> MapOp Integer -> MapOp Bool
-    GreatF :: MapOp Integer -> MapOp Integer -> MapOp Bool 
-    GreatS :: MapOp Integer -> MapOp Integer -> MapOp Bool
-    Eql   :: MapOp Integer -> MapOp Integer -> MapOp Bool
-    NEql  :: MapOp Integer -> MapOp Integer -> MapOp Bool
+    LessF    :: MapOp Integer -> MapOp Integer -> MapOp Bool 
+    LessS    :: MapOp Integer -> MapOp Integer -> MapOp Bool
+    GreatF   :: MapOp Integer -> MapOp Integer -> MapOp Bool 
+    GreatS   :: MapOp Integer -> MapOp Integer -> MapOp Bool
+    Eql      :: MapOp Integer -> MapOp Integer -> MapOp Bool
+    NEql     :: MapOp Integer -> MapOp Integer -> MapOp Bool
     GreatEqF :: MapOp Integer -> MapOp Integer -> MapOp Bool 
     GreatEqS :: MapOp Integer -> MapOp Integer -> MapOp Bool
-    LessEqF :: MapOp Integer -> MapOp Integer -> MapOp Bool 
-    LessEqS :: MapOp Integer -> MapOp Integer -> MapOp Bool
+    LessEqF  :: MapOp Integer -> MapOp Integer -> MapOp Bool 
+    LessEqS  :: MapOp Integer -> MapOp Integer -> MapOp Bool
 
     DivdF :: MapOp Double -> MapOp Double -> MapOp Double
     DivdS :: MapOp Double -> MapOp Double -> MapOp Double
@@ -36,21 +37,25 @@ data MapOp a where
 instance (Show a) => Show (MapOp a) where
     show (I n)  = show n
     show (IL l) = show l
+    
     show (D n)  = show n
     show (DL l) = show l
+    
+    show (B b)  = show b
+    show (BL b) = show b
 
     show (Add o1 o2)  = show o1 ++ " + " ++ show o2
-    show (Mult o1 o2)  = show o1 ++ " * " ++ show o2
-    show (Subt o1 o2)  = show o1 ++ " - " ++ show o2
+    show (Mult o1 o2) = show o1 ++ " * " ++ show o2
+    show (Subt o1 o2) = show o1 ++ " - " ++ show o2
     
-    show (LessF o1 o2)  = show o1 ++ " < " ++ show o2
-    show (LessS o1 o2)  = show o2 ++ " < " ++ show o1
-    show (GreatF o1 o2)  = show o1 ++ " > " ++ show o2
-    show (GreatS o1 o2)  = show o2 ++ " > " ++ show o1
-    show (Eql o1 o2)   = show o1 ++ " == " ++ show o2
-    show (NEql o1 o2) = show o1 ++ " /= " ++ show o2
-    show (GreatEqF o1 o2)  = show o1 ++ " >= " ++ show o2
-    show (GreatEqS o1 o2)  = show o2 ++ " >= " ++ show o1
+    show (LessF o1 o2)    = show o1 ++ " < " ++ show o2
+    show (LessS o1 o2)    = show o2 ++ " < " ++ show o1
+    show (GreatF o1 o2)   = show o1 ++ " > " ++ show o2
+    show (GreatS o1 o2)   = show o2 ++ " > " ++ show o1
+    show (Eql o1 o2)      = show o1 ++ " == " ++ show o2
+    show (NEql o1 o2)     = show o1 ++ " /= " ++ show o2
+    show (GreatEqF o1 o2) = show o1 ++ " >= " ++ show o2
+    show (GreatEqS o1 o2) = show o2 ++ " >= " ++ show o1
     show (LessEqF o1 o2)  = show o1 ++ " <= " ++ show o2
     show (LessEqS o1 o2)  = show o2 ++ " <= " ++ show o1
 
@@ -67,14 +72,14 @@ eval (Add o1 o2)   = eval o1 + eval o2
 eval (Mult o1 o2)  = eval o1 * eval o2
 eval (Subt o1 o2)  = eval o1 - eval o2
 
-eval (LessF o1 o2)  = eval o1 < eval o2
-eval (LessS o1 o2)  = eval o2 < eval o1
-eval (GreatF o1 o2)  = eval o1 > eval o2
-eval (GreatS o1 o2)  = eval o2 > eval o1
-eval (Eql o1 o2)   = eval o2 == eval o1
-eval (NEql o1 o2)  = eval o1 /= eval o2
-eval (GreatEqF o1 o2)  = eval o1 >= eval o2
-eval (GreatEqS o1 o2)  = eval o2 >= eval o1
+eval (LessF o1 o2)    = eval o1 < eval o2
+eval (LessS o1 o2)    = eval o2 < eval o1
+eval (GreatF o1 o2)   = eval o1 > eval o2
+eval (GreatS o1 o2)   = eval o2 > eval o1
+eval (Eql o1 o2)      = eval o2 == eval o1
+eval (NEql o1 o2)     = eval o1 /= eval o2
+eval (GreatEqF o1 o2) = eval o1 >= eval o2
+eval (GreatEqS o1 o2) = eval o2 >= eval o1
 eval (LessEqF o1 o2)  = eval o1 <= eval o2
 eval (LessEqS o1 o2)  = eval o2 <= eval o1
 
@@ -106,16 +111,16 @@ instance Show LExpr where
     show (LMult op)  = "(* " ++ show op ++ ")"
     show (LSubt op)  = "(" ++ show op ++ "-)"
 
-    show (LLessF op) = "(" ++ show op ++ "<)"
-    show (LLessS op) = "(<" ++ show op ++ ")"
-    show (LGreatF op) = "(" ++ show op ++ ">)"
-    show (LGreatS op) = "(>" ++ show op ++ ")"
-    show (LEql op)   = "(==" ++ show op ++ ")"
-    show (LNEql op)  = "(/=" ++ show op ++ ")"
+    show (LLessF op)    = "(" ++ show op ++ "<)"
+    show (LLessS op)    = "(<" ++ show op ++ ")"
+    show (LGreatF op)   = "(" ++ show op ++ ">)"
+    show (LGreatS op)   = "(>" ++ show op ++ ")"
+    show (LEql op)      = "(==" ++ show op ++ ")"
+    show (LNEql op)     = "(/=" ++ show op ++ ")"
     show (LGreatEqF op) = "(" ++ show op ++ ">=)"
     show (LGreatEqS op) = "(>=" ++ show op ++ ")"
-    show (LLessEqF op) = "(" ++ show op ++ "<=)"
-    show (LLessEqS op) = "(<=" ++ show op ++ ")"
+    show (LLessEqF op)  = "(" ++ show op ++ "<=)"
+    show (LLessEqS op)  = "(<=" ++ show op ++ ")"
 
     show (LDivdF op) = "(" ++ show op ++ "/)"
     show (LDivdS op) = "(/" ++ show op ++ ")"
@@ -152,10 +157,12 @@ instance Show Expr where
 
 data MapExpr = IMap (MapOp [Integer]) LExpr (MapOp [Integer])
              | DMap (MapOp [Double]) LExpr (MapOp [Double])
+             | BMap (MapOp [Bool]) LExpr (MapOp [Integer])
 
 instance Show MapExpr where
     show (IMap a b c) = "map " ++ show a ++ " " ++ show b ++ " " ++ show c
     show (DMap a b c) = "map " ++ show a ++ " " ++ show b ++ " " ++ show c
+    show (BMap a b c) = "map " ++ show a ++ " " ++ show b ++ " " ++ show c
 
 data FilExpr = IFilter (MapOp [Integer]) LExpr (MapOp [Integer])
 

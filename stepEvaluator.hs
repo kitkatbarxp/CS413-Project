@@ -116,6 +116,27 @@ run e@(Map m@(DMap cur lExp args)) = do
                ++ " "  ++ show remainder ++ "\n"
     run state
 
+run (Map (BMap cur _ (IL []))) = putStrLn $ show cur
+run e@(Map m@(BMap cur lExp args)) = do
+    let bc = eval cur
+    let nextVal = I (head (eval args))
+    let remainder = drop 1 (eval args)
+    
+    let predicate = convertBLExprToExpr lExp
+    let exp = predicate nextVal
+    let evalExp = eval exp
+    let state = nextState e
+
+    putStrLn "Hello"
+    -- putStrLn $ show m
+    -- putStrLn $ "   1. " ++ show bc ++ " : " ++ show exp ++ " : map "
+    --            ++ show lExp ++ " " ++ show remainder 
+    -- putStrLn $ "   2. " ++ show bc ++ " : " ++ show evalExp ++ " : map "
+    --            ++ show lExp ++ " " ++ show remainder
+    -- putStrLn $ "   3. " ++ show (bc ++ [evalExp]) ++ " : map " ++ show lExp
+    --            ++ " "  ++ show remainder ++ "\n"
+    -- run state
+
 run (Filter (IFilter cur _ (IL []))) = putStrLn $ show cur
 run e@(Filter m@(IFilter cur lExp args)) = do
     let bc = eval cur

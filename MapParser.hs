@@ -51,12 +51,14 @@ validateOp (AppE (AppE _ (InfixE _ (VarE x) _)) _) = x == mkName "+"
                                                   || x == mkName ">="
                                                   || x == mkName "<="
 
--- Parsing stuff
+-- Turn TH Exp into Custom Data Type
 parseAST :: Exp -> Expr
 parseAST (AppE (AppE (VarE func) op@(InfixE _ (VarE x) _)) l) 
   | func == mkName "map" && 
-    (x == mkName "-" || x == mkName "+" || x == mkName "==") 
+    (x == mkName "-" || x == mkName "+") 
       = Map (IMap (IL []) (parseOP op) (parseIList l))
+  | func == mkName "map" && x == mkName "==" 
+      = Map (BMap (BL []) (parseOP op) (parseIList l))
   | func == mkName "map" && x == mkName "/" 
       = Map (DMap (DL []) (parseOP op) (parseDList l))
   | func == mkName "filter" && 
@@ -88,14 +90,12 @@ parseOP (InfixE (Just (LitE v)) (VarE x) Nothing)
     | x == mkName "<=" = LLessEqF  (parseIV v)
 
 -- TH variable to custom data type
--- How to return Op of different type?
 parseIV :: Lit -> MapOp Integer
 parseIV (IntegerL v) = I v
 
 parseDV :: Lit -> MapOp Double
 parseDV (IntegerL v) = D (fromIntegral v)
 
--- How to return Op of different array types?
 parseIList :: Exp -> MapOp [Integer]
 parseIList (ListE a) = IL (map (\(LitE (IntegerL e)) -> e) a)
 
