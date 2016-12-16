@@ -65,8 +65,12 @@ instance (Show a) => Show (MapOp a) where
 eval :: MapOp a -> a
 eval (I n)  = n
 eval (IL l) = l
+
 eval (D n)  = n
 eval (DL l) = l
+
+eval (B l)  = l
+eval (BL l) = l
 
 eval (Add o1 o2)   = eval o1 + eval o2
 eval (Mult o1 o2)  = eval o1 * eval o2

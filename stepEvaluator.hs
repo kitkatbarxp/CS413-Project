@@ -67,6 +67,13 @@ nextState m@(Map (DMap cur lExp args)) = Map dMap
           exp       = convertDLExprToExpr lExp
           dMap      = DMap (DL (baseCase ++ [ eval . exp $ nextVal ])) lExp
                         (DL remainder)
+nextState m@(Map (BMap cur lExp args)) = Map bMap
+    where baseCase  = eval cur
+          nextVal   = I (head (eval args))
+          remainder = drop 1 (eval args)
+          result    = eval . (convertBLExprToExpr lExp) $ nextVal
+          bMap      = BMap (BL (baseCase ++ [ result ])) lExp
+                        (IL remainder)
 nextState m@(Filter (IFilter cur lExp args)) = Filter iFil
     where baseCase  = eval cur
           nextVal   = I (head (eval args))
@@ -128,6 +135,8 @@ run e@(Map m@(BMap cur lExp args)) = do
     let state = nextState e
 
     putStrLn "Hello"
+    putStrLn $ show e
+    putStrLn $ show state
     -- putStrLn $ show m
     -- putStrLn $ "   1. " ++ show bc ++ " : " ++ show exp ++ " : map "
     --            ++ show lExp ++ " " ++ show remainder 
@@ -135,7 +144,7 @@ run e@(Map m@(BMap cur lExp args)) = do
     --            ++ show lExp ++ " " ++ show remainder
     -- putStrLn $ "   3. " ++ show (bc ++ [evalExp]) ++ " : map " ++ show lExp
     --            ++ " "  ++ show remainder ++ "\n"
-    -- run state
+    run state
 
 run (Filter (IFilter cur _ (IL []))) = putStrLn $ show cur
 run e@(Filter m@(IFilter cur lExp args)) = do
@@ -144,7 +153,7 @@ run e@(Filter m@(IFilter cur lExp args)) = do
     let remainder = drop 1 (eval args)
 
     let predicate = convertBLExprToExpr lExp
-    let exp = predicate $ nextVal
+    let exp = predicate nextVal
     let result = eval exp
     let state = nextState e
 
