@@ -62,6 +62,8 @@ instance (Show a) => Show (MapOp a) where
     show (DivdF o1 o2) = show o1 ++ " / " ++ show o2
     show (DivdS o1 o2) = show o2 ++ " / " ++ show o1
 
+
+
 eval :: MapOp a -> a
 eval (I n)  = n
 eval (IL l) = l
@@ -128,7 +130,14 @@ instance Show LExpr where
 
     show (LDivdF op) = "(" ++ show op ++ "/)"
     show (LDivdS op) = "(/" ++ show op ++ ")"
-    
+
+data InfixLExpr = InfixAdd
+                | InfixSub
+
+instance Show InfixLExpr where
+    show InfixAdd = "(+)"
+    show InfixSub = "(-)"
+
 
 convertILExprToExpr :: LExpr -> (MapOp Integer -> MapOp Integer)
 convertILExprToExpr (LAdd n)  = Add n
@@ -151,13 +160,19 @@ convertDLExprToExpr :: LExpr -> (MapOp Double -> MapOp Double)
 convertDLExprToExpr (LDivdF n) = DivdF n
 convertDLExprToExpr (LDivdS n) = DivdS n
 
--- map
+convertInfixLExprToExpr :: InfixLExpr -> (MapOp Integer -> MapOp Integer -> MapOp Integer)
+convertInfixLExprToExpr InfixAdd = Add
+convertInfixLExprToExpr InfixSub = Subt
+
+-- Specific Types for Higher-Order Functions
 data Expr = Map MapExpr
           | Filter FilExpr
+          | Foldl FoldLExpr
 
 instance Show Expr where
     show (Map m)    = show m
     show (Filter f) = show f
+    show (Foldl f) = show f
 
 data MapExpr = IMap (MapOp [Integer]) LExpr (MapOp [Integer])
              | DMap (MapOp [Double]) LExpr (MapOp [Double])
@@ -172,3 +187,12 @@ data FilExpr = IFilter (MapOp [Integer]) LExpr (MapOp [Integer])
 
 instance Show FilExpr where
     show (IFilter a b c) = "filter " ++ show a ++ " " ++ show b ++ " " ++ show c
+
+data FoldLExpr = IFoldL InfixLExpr (MapOp Integer) (MapOp [Integer])
+
+instance Show FoldLExpr where
+    show (IFoldL a b c) = "filter " ++ show a ++ " " ++ show b ++ " " ++ show c
+
+
+
+

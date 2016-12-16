@@ -35,7 +35,7 @@ main = do putStrLn "Please enter source code: "
           else do putStrLn "Type: check."
 
           -- checks to make sure source code uses allowed operator;
-          -- currently supports: +, *, -
+          -- currently supports: +, *, -, /, ==, /=, <, >, <=, >=
           -- quits if not
           let validOp = validateOp ast
           if (not validOp)
@@ -82,6 +82,13 @@ nextState m@(Filter (IFilter cur lExp args)) = Filter iFil
           result    = eval . predicate $ nextVal
           iFil      = IFilter (IL ((\r -> if r then baseCase ++ [ eval $ nextVal ] else baseCase) result)) lExp
                         (IL remainder)
+nextState m@(Foldl (IFoldL ifOp curr args)) = Foldl iFoldl
+    where nextVal   = I (head (eval args))
+          remainder = drop 1 (eval args)
+          result    = eval $ (convertInfixLExprToExpr ifOp) curr nextVal
+          iFoldl    = IFoldL ifOp (I result)
+                        (IL remainder)
+
 
 -- run prints the current state and calculates the next state
 run :: Expr -> IO ()
@@ -170,6 +177,35 @@ run e@(Filter m@(IFilter cur lExp args)) = do
               ++ " "  ++ show remainder
             putStrLn $ "   4. " ++ show bc ++ " : filter " ++ show lExp
               ++ " "  ++ show remainder ++ "\n"
+
+    run state
+
+run (Foldl (IFoldL _ cur (IL []))) = putStrLn $ show cur
+run e@(Foldl m@(IFoldL ifOp cur args)) = do
+
+    let nextVal = I (head (eval args))
+    let remainder = drop 1 (eval args)
+
+    let op = (convertInfixLExprToExpr ifOp) cur nextVal
+    let result = eval op
+    let state = nextState e
+
+    putStrLn $ show m
+    putStrLn $ "   1. foldl "
+              ++ show ifOp ++ " (" ++ show op ++ ") " ++ show remainder 
+    putStrLn $ "   2. foldl "
+              ++ show ifOp ++ " (" ++ show result ++ ") " ++ show remainder
+    -- if (result)
+    --   then do
+    --         putStrLn $ "   3. " ++ show bc ++ " : " ++ show nextVal ++ " : filter " ++ show lExp
+    --           ++ " "  ++ show remainder
+    --         putStrLn $ "   4. " ++ show (bc ++ [eval nextVal]) ++ " : filter " ++ show lExp
+    --           ++ " "  ++ show remainder ++ "\n"
+    --   else do
+    --         putStrLn $ "   3. " ++ show bc ++ " : None : filter " ++ show lExp
+    --           ++ " "  ++ show remainder
+    --         putStrLn $ "   4. " ++ show bc ++ " : filter " ++ show lExp
+    --           ++ " "  ++ show remainder ++ "\n"
 
     run state
 
