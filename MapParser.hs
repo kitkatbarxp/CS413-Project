@@ -17,10 +17,18 @@ import MapExpr
 
 -- validates the abstract syntax tree structure
 validateASTStructure :: Exp -> Bool
-validateASTStructure (AppE (AppE (VarE name) (InfixE (Just _) (VarE _) Nothing)) 
-  (ListE list)) = name == mkName "map" || name == mkName "filter"
-validateASTStructure (AppE (AppE (VarE name) (InfixE Nothing (VarE _) (Just _)))
-   (ListE list)) = name == mkName "map" || name == mkName "filter"
+validateASTStructure (AppE (AppE (VarE name) (InfixE (Just _) (VarE e) Nothing)) 
+  (ListE list))
+  | name == mkName "filter" && 
+    (e == mkName "+" || e == mkName "-" || e == mkName "/" || e == mkName "*")
+    = False
+  | name == mkName "map" || name == mkName "filter" = True
+validateASTStructure (AppE (AppE (VarE name) (InfixE Nothing (VarE e) (Just _)))
+  (ListE list))
+  | name == mkName "filter" && 
+    (e == mkName "+" || e == mkName "-" || e == mkName "/" || e == mkName "*")
+    = False
+  | name == mkName "map" || name == mkName "filter" = True
 validateASTStructure _ = False
 
 -- type checks                                                                  
@@ -54,7 +62,7 @@ validateOp (AppE (AppE _ (InfixE _ (VarE x) _)) _) = x == mkName "+"
 parseAST :: Exp -> Expr
 parseAST (AppE (AppE (VarE func) op@(InfixE _ (VarE x) _)) l) 
   | func == mkName "map" && 
-    (x == mkName "-" || x == mkName "+") 
+    (x == mkName "-" || x == mkName "+" || x == mkName "*") 
       = Map (IMap (IL []) (parseOP op) (parseIList l))
   | func == mkName "map" && 
     (x == mkName "==" || x == mkName "/=" || x == mkName "<" || 
