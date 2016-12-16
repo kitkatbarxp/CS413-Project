@@ -1,3 +1,31 @@
 # Haskell Substitution Stepper
 
-This project is part of Middlebury College's Functional Programming class. It is a continuation of Ben Milwood's StepEval, and attempts to draw from his experiences to create a more elegant and less buggy Haskell Substitution Stepper. 
+This project is part of Middlebury College's Functional Programming class.
+It is a continuation of Ben Milwood's StepEval, and attempts to draw from his
+experiences to create a more elegant and less buggy Haskell Substitution
+Stepper.
+
+Required packages:
+- template-haskell
+- haskell-src-meta
+
+To run this program:
+1. Type the following in the command line.
+    runhaskell stepEvaluator.hs
+2. Follow the prompts of the program.
+
+Features:
+1. Display steps of the following higher-order function calls (for Integers):
+    - map
+    - filter
+    - fold
+2. Valid operations for Integers:
+    - addition
+    - subtraction
+    - multiplication
+    - division*
+    - boolean operations (==, /=)
+    - (in)equality operations (<, <=, >, >=)
+3. Repeatedly prompt the user to input source code.
+4. Validate input source code before attempting to parse and print out the
+    type of error if there was any.
